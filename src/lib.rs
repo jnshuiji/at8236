@@ -1,3 +1,5 @@
+#![no_std]
+
 use embedded_hal::pwm::SetDutyCycle;
 
 pub struct At8236<P1, P2> {
