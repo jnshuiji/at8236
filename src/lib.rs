@@ -43,6 +43,12 @@ where
         self.decay_mode = mode;
     }
 
+    /// Get the maximum duty cycle value (PWM resolution)
+    #[inline]
+    pub fn max_duty_cycle(&self) -> u16 {
+        self.in1.max_duty_cycle()
+    }
+
     /// Convert a percentage (0 ~ 100) to a duty cycle value
     #[inline]
     fn percent_to_duty(&self, percent: u8) -> u16 {
@@ -65,11 +71,13 @@ where
         Ok(())
     }
 
-    /// `percent` range 0 ~ 100
+    /// Forward with raw duty cycle value (0 ~ `max_duty_cycle()`)
+    ///
+    /// Provides the highest precision control, using the full PWM resolution directly.
     #[inline]
-    pub fn forward(&mut self, percent: u8) -> Result<(), Error<P1::Error>> {
+    pub fn forward_duty(&mut self, duty: u16) -> Result<(), Error<P1::Error>> {
         let max_duty = self.in1.max_duty_cycle();
-        let duty = self.percent_to_duty(percent);
+        let duty = duty.min(max_duty);
 
         match self.decay_mode {
             DecayMode::Fast => {
@@ -86,11 +94,13 @@ where
         Ok(())
     }
 
-    /// `percent` 取值 0 ~ 100
+    /// Reverse with raw duty cycle value (0 ~ `max_duty_cycle()`)
+    ///
+    /// Provides the highest precision control, using the full PWM resolution directly.
     #[inline]
-    pub fn reverse(&mut self, percent: u8) -> Result<(), Error<P1::Error>> {
+    pub fn reverse_duty(&mut self, duty: u16) -> Result<(), Error<P1::Error>> {
         let max_duty = self.in1.max_duty_cycle();
-        let duty = self.percent_to_duty(percent);
+        let duty = duty.min(max_duty);
 
         match self.decay_mode {
             DecayMode::Fast => {
@@ -105,5 +115,17 @@ where
             }
         }
         Ok(())
+    }
+
+    /// Forward with integer percentage (0 ~ 100)
+    #[inline]
+    pub fn forward(&mut self, percent: u8) -> Result<(), Error<P1::Error>> {
+        self.forward_duty(self.percent_to_duty(percent))
+    }
+
+    /// Reverse with integer percentage (0 ~ 100)
+    #[inline]
+    pub fn reverse(&mut self, percent: u8) -> Result<(), Error<P1::Error>> {
+        self.reverse_duty(self.percent_to_duty(percent))
     }
 }
